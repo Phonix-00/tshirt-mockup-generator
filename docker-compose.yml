@@ -1,0 +1,35 @@
+version: "3.9"
+
+services:
+  web:
+    build: .
+    container_name: tshirt_web
+    command: python manage.py runserver 0.0.0.0:8000
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+      - media_data:/app/media
+    depends_on:
+      - redis
+      - worker
+
+  worker:
+    build: .
+    container_name: tshirt_worker
+    command: celery -A config worker --loglevel=info --pool=solo
+    volumes:
+      - .:/app
+      - media_data:/app/media
+    depends_on:
+      - redis
+
+  redis:
+    image: redis:7
+    container_name: tshirt_redis
+    command: ["redis-server", "--port", "6380"]
+    ports:
+      - "6380:6380"
+
+volumes:
+  media_data:
